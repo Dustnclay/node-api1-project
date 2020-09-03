@@ -12,15 +12,27 @@ server.post('/api/users',(req,res) => {
     const newUser = req.body;
     newUser.id = shortid.generate();
 
-    users.push(newUser);
+    try{
+        if(newUser.name && newUser.bio ){
+            users.push(newUser)
+            res.status(201).json(users)    
+        } else{
+            res.status(400).json({message:"come on man.. add a name and bio.."});
+        }
 
-    res.status(201).json(users);
+    }catch(err) {
+        res.status(500).json({message:"There was an error while saving the user to the database"});
+    }
     
 })
 
 //--GET-api/users--//
 server.get('/api/users',(req,res) => {
-    res.status(200).json(users)
+    try{
+        res.status(200).json(users)
+    }catch(err) {
+        res.status(500).json({message:"The users information could not be retrieved."});
+    }
 })
 
 //--DELETE-api/users/id--//
@@ -29,27 +41,33 @@ server.delete('/api/users/:id',(req,res) => {
 
     const deleted = users.find( user => user.id === id)
 
-    if(deleted) {
-        users = users.filter(user => user.id !== id)
-        res.status(200).json(deleted)
+    try{
+        if(deleted) {
+            users = users.filter(user => user.id !== id)
+            res.status(200).json(deleted)
+        }
+        else{
+            res.status(404).json({message:"user not found"})
+        }
+    }catch(err) {
+        res.status(500).json({message:"The user could not be removed"});
     }
-    else{
-        res.status(404).json({message:"user not found"})
-    }
-
 })
 
 //--GET w/ id-api/users/id--//
 server.get('/api/users/:id',(req,res) => {
     const {id} = req.params;
+    try{
+        let searched = users.find( user => user.id === id)
 
-    let searched = users.find( user => user.id === id)
-
-    if(searched) {
-        res.status(200).json(searched)
-    }
-    else{
-        res.status(404).json({message:"this user not found"})
+        if(searched) {
+            res.status(200).json(searched)
+        }
+        else{
+            res.status(404).json({message:"this user not found"})
+        }
+    }catch(err) {
+        res.status(500).json({message:"The user information could not be retrieved."});
     }
 
 })
@@ -60,14 +78,22 @@ server.put('/api/users/:id',(req,res) => {
     const changes = req.body;
     changes.id = id;
 
-    let index = users.findIndex( user => user.id === id)
+    try{
+        let index = users.findIndex( user => user.id === id)
 
-    if(index !== -1) {
-        users[index] = changes;
-        res.status(200).json(users[index])
-    }
-    else{
-        res.status(404).json({message:"user not found"})
+        if(index !== -1) {
+            if(changes.name && changes.bio ){
+                users[index] = changes;
+                res.status(200).json(users[index])
+            } else{
+                res.status(400).json({message:"come on man.. add a name and bio.."});
+            }
+        }
+        else{
+            res.status(404).json({message:"user not found"})
+        }
+    }catch(err) {
+        res.status(500).json({message:"error in updating the user"});
     }
 
 })
